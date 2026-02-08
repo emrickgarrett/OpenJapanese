@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Volume2, VolumeX, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -8,6 +8,11 @@ import GameScore from '@/components/games/GameScore';
 import GameResults from '@/components/games/GameResults';
 import { useGameStore } from '@/stores/game-store';
 import { XP_REWARDS } from '@/lib/progression/xp';
+import {
+  speakJapanese,
+  loadVoices,
+  isSpeechSupported,
+} from '@/lib/audio/speech';
 
 interface ListeningItem {
   id: string;
@@ -55,13 +60,19 @@ export default function ListeningGame({
   const [hasPlayed, setHasPlayed] = useState(false);
   const [startTime] = useState(Date.now());
   const [isSpeechAvailable, setIsSpeechAvailable] = useState(true);
-  const synthRef = useRef<SpeechSynthesis | null>(null);
 
+  // Pre-load voices on mount so they are ready for playback
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      synthRef.current = window.speechSynthesis;
-      setIsSpeechAvailable('speechSynthesis' in window);
+    if (!isSpeechSupported()) {
+      setIsSpeechAvailable(false);
+      return;
     }
+
+    loadVoices().then((voices) => {
+      if (voices.length === 0) {
+        setIsSpeechAvailable(false);
+      }
+    });
   }, []);
 
   const generateQuestions = useCallback(() => {
@@ -99,32 +110,32 @@ export default function ListeningGame({
     initGame();
     return () => {
       resetGame();
-      synthRef.current?.cancel();
+      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
     };
   }, []);
 
   const speak = useCallback(
-    (text: string) => {
-      if (!synthRef.current || !isSpeechAvailable) return;
+    async (text: string) => {
+      if (!isSpeechAvailable) return;
 
-      synthRef.current.cancel();
+      const rate =
+        difficulty === 'easy' ? 0.7 : difficulty === 'medium' ? 0.85 : 1;
 
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = 'ja-JP';
-      utterance.rate = difficulty === 'easy' ? 0.7 : difficulty === 'medium' ? 0.85 : 1;
-      utterance.pitch = 1;
-
-      utterance.onstart = () => setIsPlaying(true);
-      utterance.onend = () => {
-        setIsPlaying(false);
-        setHasPlayed(true);
-      };
-      utterance.onerror = () => {
-        setIsPlaying(false);
-        setHasPlayed(true);
-      };
-
-      synthRef.current.speak(utterance);
+      await speakJapanese({
+        text,
+        rate,
+        onStart: () => setIsPlaying(true),
+        onEnd: () => {
+          setIsPlaying(false);
+          setHasPlayed(true);
+        },
+        onError: () => {
+          setIsPlaying(false);
+          setHasPlayed(true);
+        },
+      });
     },
     [isSpeechAvailable, difficulty]
   );

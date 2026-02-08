@@ -1,9 +1,14 @@
 'use client';
 
-import { useState, useCallback } from 'react';
-import { Volume2 } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { Volume2, VolumeX } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import {
+  speakJapanese,
+  loadVoices,
+  isSpeechSupported,
+} from '@/lib/audio/speech';
 
 interface AudioButtonProps {
   text: string;
@@ -17,31 +22,55 @@ export default function AudioButton({
   className,
 }: AudioButtonProps) {
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isAvailable, setIsAvailable] = useState(true);
 
-  const speak = useCallback(() => {
-    if (typeof window === 'undefined' || !window.speechSynthesis) return;
-
-    // Cancel any ongoing speech
-    window.speechSynthesis.cancel();
-
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = lang;
-    utterance.rate = 0.8;
-    utterance.pitch = 1;
-
-    // Try to find a Japanese voice
-    const voices = window.speechSynthesis.getVoices();
-    const japaneseVoice = voices.find((v) => v.lang.startsWith('ja'));
-    if (japaneseVoice) {
-      utterance.voice = japaneseVoice;
+  // Pre-load voices on mount so they are ready when the user clicks
+  useEffect(() => {
+    if (!isSpeechSupported()) {
+      setIsAvailable(false);
+      return;
     }
 
-    utterance.onstart = () => setIsPlaying(true);
-    utterance.onend = () => setIsPlaying(false);
-    utterance.onerror = () => setIsPlaying(false);
+    // Kick off voice loading early
+    loadVoices().then((voices) => {
+      // If the browser has speech synthesis but no voices at all,
+      // mark as unavailable
+      if (voices.length === 0) {
+        setIsAvailable(false);
+      }
+    });
+  }, []);
 
-    window.speechSynthesis.speak(utterance);
-  }, [text, lang]);
+  const speak = useCallback(async () => {
+    if (!isAvailable) return;
+
+    const ok = await speakJapanese({
+      text,
+      lang,
+      onStart: () => setIsPlaying(true),
+      onEnd: () => setIsPlaying(false),
+      onError: () => setIsPlaying(false),
+    });
+
+    if (!ok) {
+      setIsAvailable(false);
+    }
+  }, [text, lang, isAvailable]);
+
+  if (!isAvailable) {
+    return (
+      <Button
+        variant="outline"
+        size="icon-sm"
+        disabled
+        className={cn('rounded-full cursor-not-allowed opacity-50', className)}
+        aria-label="Pronunciation unavailable"
+        title="Speech synthesis is not available in this browser"
+      >
+        <VolumeX className="size-4" />
+      </Button>
+    );
+  }
 
   return (
     <Button

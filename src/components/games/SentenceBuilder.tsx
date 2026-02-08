@@ -4,14 +4,14 @@ import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   DndContext,
-  closestCenter,
+  pointerWithin,
   KeyboardSensor,
   PointerSensor,
   useSensor,
   useSensors,
   DragEndEvent,
-  DragOverEvent,
   DragStartEvent,
+  DragOverlay,
   useDroppable,
 } from '@dnd-kit/core';
 import {
@@ -150,6 +150,31 @@ const SENTENCES: SentenceChallenge[] = [
 
 const ITEMS_PER_GAME = 10;
 
+interface TileStyleProps {
+  word: string;
+  status?: 'correct' | 'incorrect' | null;
+  isDragOverlay?: boolean;
+}
+
+function TileContent({ word, status, isDragOverlay }: TileStyleProps) {
+  let bgClass = 'border-border/50 bg-card hover:border-emerald-400/30';
+  if (status === 'correct') {
+    bgClass = 'border-emerald-400/50 bg-emerald-500/15';
+  } else if (status === 'incorrect') {
+    bgClass = 'border-red-400/50 bg-red-500/15';
+  }
+
+  return (
+    <div
+      className={`cursor-grab rounded-lg border-2 px-3 py-2 text-sm font-medium transition-colors select-none active:cursor-grabbing ${bgClass} ${
+        isDragOverlay ? 'shadow-xl scale-105 ring-2 ring-emerald-400/40' : ''
+      }`}
+    >
+      {word}
+    </div>
+  );
+}
+
 interface SortableTileProps {
   id: string;
   word: string;
@@ -170,14 +195,8 @@ function SortableTile({ id, word, isInDropZone, status }: SortableTileProps) {
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
+    opacity: isDragging ? 0.3 : 1,
   };
-
-  let bgClass = 'border-border/50 bg-card hover:border-emerald-400/30';
-  if (status === 'correct') {
-    bgClass = 'border-emerald-400/50 bg-emerald-500/15';
-  } else if (status === 'incorrect') {
-    bgClass = 'border-red-400/50 bg-red-500/15';
-  }
 
   return (
     <div
@@ -185,29 +204,53 @@ function SortableTile({ id, word, isInDropZone, status }: SortableTileProps) {
       style={style}
       {...attributes}
       {...listeners}
-      className={`cursor-grab rounded-lg border-2 px-3 py-2 text-sm font-medium transition-colors select-none active:cursor-grabbing ${bgClass} ${
-        isDragging ? 'opacity-50 shadow-lg' : ''
-      }`}
     >
-      {word}
+      <TileContent word={word} status={status} />
     </div>
   );
 }
 
 interface DroppableZoneProps {
   children: React.ReactNode;
+  isDragging: boolean;
 }
 
-function DroppableZone({ children }: DroppableZoneProps) {
+function DroppableZone({ children, isDragging }: DroppableZoneProps) {
   const { setNodeRef, isOver } = useDroppable({ id: 'dropzone' });
 
   return (
     <div
       ref={setNodeRef}
-      className={`min-h-[56px] flex flex-wrap items-center gap-2 rounded-xl border-2 border-dashed p-3 transition-colors ${
+      className={`min-h-[56px] flex flex-wrap items-center gap-2 rounded-xl border-2 border-dashed p-3 transition-all duration-200 ${
         isOver
-          ? 'border-emerald-400/50 bg-emerald-500/5'
-          : 'border-border/50 bg-muted/10'
+          ? 'border-emerald-400 bg-emerald-500/10 shadow-inner shadow-emerald-500/10'
+          : isDragging
+            ? 'border-emerald-400/40 bg-emerald-500/5'
+            : 'border-border/50 bg-muted/10'
+      }`}
+    >
+      {children}
+    </div>
+  );
+}
+
+interface WordBankZoneProps {
+  children: React.ReactNode;
+  isDragging: boolean;
+}
+
+function WordBankZone({ children, isDragging }: WordBankZoneProps) {
+  const { setNodeRef, isOver } = useDroppable({ id: 'wordbank' });
+
+  return (
+    <div
+      ref={setNodeRef}
+      className={`flex flex-wrap gap-2 rounded-xl border p-3 min-h-[56px] transition-all duration-200 ${
+        isOver
+          ? 'border-border bg-muted/20'
+          : isDragging
+            ? 'border-border/50 bg-muted/10'
+            : 'border-border/30 bg-muted/5'
       }`}
     >
       {children}
@@ -326,6 +369,15 @@ export default function SentenceBuilder({ difficulty }: SentenceBuilderProps) {
     setActiveDragId(event.active.id as string);
   };
 
+  // Helper: determine which container (dropzone or wordbank) a tile or zone ID belongs to
+  const findContainer = (id: string): 'dropzone' | 'wordbank' | null => {
+    if (id === 'dropzone') return 'dropzone';
+    if (id === 'wordbank') return 'wordbank';
+    if (dropZoneItems.includes(id)) return 'dropzone';
+    if (bankItems.includes(id)) return 'wordbank';
+    return null;
+  };
+
   const handleDragEnd = (event: DragEndEvent) => {
     setActiveDragId(null);
     const { active, over } = event;
@@ -334,57 +386,44 @@ export default function SentenceBuilder({ difficulty }: SentenceBuilderProps) {
     const activeId = active.id as string;
     const overId = over.id as string;
 
-    // Moving within drop zone
-    if (dropZoneItems.includes(activeId) && dropZoneItems.includes(overId)) {
-      const oldIndex = dropZoneItems.indexOf(activeId);
-      const newIndex = dropZoneItems.indexOf(overId);
-      setDropZoneItems(arrayMove(dropZoneItems, oldIndex, newIndex));
+    const activeContainer = findContainer(activeId);
+    const overContainer = findContainer(overId);
+
+    if (!activeContainer || !overContainer) return;
+
+    // Same container: reorder
+    if (activeContainer === overContainer) {
+      if (activeContainer === 'dropzone' && activeId !== overId) {
+        const oldIndex = dropZoneItems.indexOf(activeId);
+        const newIndex = dropZoneItems.indexOf(overId);
+        if (oldIndex !== -1 && newIndex !== -1) {
+          setDropZoneItems(arrayMove(dropZoneItems, oldIndex, newIndex));
+        }
+      }
+      // No reordering needed within word bank
       return;
     }
 
-    // Moving from bank to drop zone
-    if (bankItems.includes(activeId)) {
-      if (overId === 'dropzone' || dropZoneItems.includes(overId)) {
-        setBankItems((prev) => prev.filter((id) => id !== activeId));
-        if (dropZoneItems.includes(overId)) {
-          const overIndex = dropZoneItems.indexOf(overId);
-          setDropZoneItems((prev) => {
-            const newArr = [...prev];
-            newArr.splice(overIndex, 0, activeId);
-            return newArr;
-          });
-        } else {
-          setDropZoneItems((prev) => [...prev, activeId]);
-        }
+    // Moving from bank → drop zone
+    if (activeContainer === 'wordbank' && overContainer === 'dropzone') {
+      setBankItems((prev) => prev.filter((id) => id !== activeId));
+      if (dropZoneItems.includes(overId)) {
+        // Dropped on a specific tile — insert at that position
+        const overIndex = dropZoneItems.indexOf(overId);
+        setDropZoneItems((prev) => {
+          const newArr = [...prev];
+          newArr.splice(overIndex, 0, activeId);
+          return newArr;
+        });
+      } else {
+        // Dropped on the zone itself — append
+        setDropZoneItems((prev) => [...prev, activeId]);
       }
       return;
     }
 
-    // Moving from drop zone to bank
-    if (
-      dropZoneItems.includes(activeId) &&
-      (bankItems.includes(overId) || overId === 'wordbank')
-    ) {
-      setDropZoneItems((prev) => prev.filter((id) => id !== activeId));
-      setBankItems((prev) => [...prev, activeId]);
-    }
-  };
-
-  const handleDragOver = (event: DragOverEvent) => {
-    const { active, over } = event;
-    if (!over) return;
-
-    const activeId = active.id as string;
-    const overId = over.id as string;
-
-    // Move from bank to dropzone when hovering over it
-    if (bankItems.includes(activeId) && overId === 'dropzone') {
-      setBankItems((prev) => prev.filter((id) => id !== activeId));
-      setDropZoneItems((prev) => [...prev, activeId]);
-    }
-
-    // Move from dropzone back to bank
-    if (dropZoneItems.includes(activeId) && overId === 'wordbank') {
+    // Moving from drop zone → bank
+    if (activeContainer === 'dropzone' && overContainer === 'wordbank') {
       setDropZoneItems((prev) => prev.filter((id) => id !== activeId));
       setBankItems((prev) => [...prev, activeId]);
     }
@@ -516,12 +555,11 @@ export default function SentenceBuilder({ difficulty }: SentenceBuilderProps) {
       {/* DnD Context */}
       <DndContext
         sensors={sensors}
-        collisionDetection={closestCenter}
+        collisionDetection={pointerWithin}
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
-        onDragOver={handleDragOver}
       >
-        {/* Drop Zone */}
+        {/* Drop Zone (answer area) */}
         <div className="space-y-2">
           <p className="text-sm text-muted-foreground">
             Your answer (drag or click to arrange):
@@ -530,10 +568,10 @@ export default function SentenceBuilder({ difficulty }: SentenceBuilderProps) {
             items={dropZoneItems}
             strategy={horizontalListSortingStrategy}
           >
-            <DroppableZone>
+            <DroppableZone isDragging={!!activeDragId}>
               {dropZoneItems.length === 0 ? (
                 <span className="text-sm text-muted-foreground/50">
-                  Drag words here...
+                  {activeDragId ? 'Drop words here...' : 'Drag or click words to build your answer'}
                 </span>
               ) : (
                 dropZoneItems.map((id) => (
@@ -557,13 +595,11 @@ export default function SentenceBuilder({ difficulty }: SentenceBuilderProps) {
         {/* Word Bank */}
         <div className="space-y-2">
           <p className="text-sm text-muted-foreground">Word bank:</p>
-          <div
-            className="flex flex-wrap gap-2 rounded-xl border border-border/30 bg-muted/5 p-3 min-h-[56px]"
+          <SortableContext
+            items={bankItems}
+            strategy={horizontalListSortingStrategy}
           >
-            <SortableContext
-              items={bankItems}
-              strategy={horizontalListSortingStrategy}
-            >
+            <WordBankZone isDragging={!!activeDragId}>
               {bankItems.map((id) => (
                 <div
                   key={id}
@@ -576,14 +612,21 @@ export default function SentenceBuilder({ difficulty }: SentenceBuilderProps) {
                   />
                 </div>
               ))}
-            </SortableContext>
-            {bankItems.length === 0 && (
-              <span className="text-sm text-muted-foreground/50">
-                All words placed
-              </span>
-            )}
-          </div>
+              {bankItems.length === 0 && (
+                <span className="text-sm text-muted-foreground/50">
+                  All words placed
+                </span>
+              )}
+            </WordBankZone>
+          </SortableContext>
         </div>
+
+        {/* Drag Overlay — floating tile under the cursor */}
+        <DragOverlay dropAnimation={null}>
+          {activeDragId ? (
+            <TileContent word={getTileWord(activeDragId)} isDragOverlay />
+          ) : null}
+        </DragOverlay>
       </DndContext>
 
       {/* Feedback */}

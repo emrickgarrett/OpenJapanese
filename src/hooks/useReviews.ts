@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase/client';
 import { processReview } from '@/lib/srs/engine';
 import { loadKanji, loadVocabulary, loadGrammar } from '@/lib/curriculum/loader';
 import { XP_REWARDS, getLevelFromXP } from '@/lib/progression/xp';
+import { trackDailyActivity } from '@/lib/supabase/daily-activity';
 import { SRS_STAGES } from '@/lib/srs/constants';
 import type { UserProgress } from '@/types/progress';
 import type { SRSUpdate } from '@/types/srs';
@@ -305,6 +306,13 @@ export function useReviews(profileId: string | undefined): UseReviewsReturn {
           })
           .eq('id', profileId);
       }
+
+      // Track daily activity for leaderboard / heatmap
+      await trackDailyActivity(profileId, {
+        xpEarned: totalXpEarned,
+        reviewsCompleted: 1,
+        itemsBurned: srsUpdate.newStage === SRS_STAGES.BURNED ? 1 : 0,
+      });
 
       return srsUpdate;
     },

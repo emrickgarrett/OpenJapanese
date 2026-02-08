@@ -6,6 +6,7 @@ import {
   getLevelFromXP,
   getXPProgress,
 } from '@/lib/progression/xp';
+import { trackDailyActivity } from '@/lib/supabase/daily-activity';
 import { useAudio } from '@/hooks/useAudio';
 import { useMascot } from '@/hooks/useMascot';
 
@@ -108,38 +109,8 @@ export function useXP(profileId: string, initialXP: number = 0): UseXPReturn {
           }
         });
 
-      // 2. Upsert today's daily_activity xp_earned
-      const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
-      supabase
-        .rpc('increment_daily_xp', {
-          p_profile_id: profileId,
-          p_date: today,
-          p_xp: amount,
-          p_source: source,
-        })
-        .then(({ error }) => {
-          if (error) {
-            // Fallback: try a simple upsert if the RPC doesn't exist
-            supabase
-              .from('daily_activity')
-              .upsert(
-                {
-                  profile_id: profileId,
-                  activity_date: today,
-                  xp_earned: amount,
-                },
-                { onConflict: 'profile_id,activity_date' },
-              )
-              .then(({ error: upsertError }) => {
-                if (upsertError) {
-                  console.warn(
-                    '[useXP] Failed to update daily activity:',
-                    upsertError,
-                  );
-                }
-              });
-          }
-        });
+      // 2. Track daily activity (xp_earned)
+      trackDailyActivity(profileId, { xpEarned: amount });
 
       // ── Level-up side effects ────────────────────────────────────────
 

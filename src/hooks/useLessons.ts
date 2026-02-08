@@ -10,6 +10,7 @@ import {
   getLessonItems,
 } from '@/lib/curriculum/loader';
 import { XP_REWARDS, getLevelFromXP } from '@/lib/progression/xp';
+import { trackDailyActivity } from '@/lib/supabase/daily-activity';
 import type {
   LessonGroup,
   JLPTLevel,
@@ -238,6 +239,13 @@ export function useLessons(
           })
           .eq('id', profileId);
       }
+
+      // Track daily activity for leaderboard / heatmap
+      await trackDailyActivity(profileId, {
+        xpEarned,
+        lessonsCompleted: 1,
+        itemsLearned: itemIds.length,
+      });
 
       // Refresh lesson data
       await loadData();

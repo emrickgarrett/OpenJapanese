@@ -25,42 +25,11 @@ import { StreakCounter } from '@/components/progress/StreakCounter';
 import { LevelBadge } from '@/components/progress/LevelBadge';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { cn } from '@/lib/utils';
-
-// ─── Mock Data ──────────────────────────────────────────────────────────────
-// TODO: Replace with real Supabase queries
-
-const MOCK_STATS = {
-  streak: 7,
-  isStreakActive: true,
-  totalXp: 1_234,
-  itemsLearned: 142,
-  reviewsDoneToday: 15,
-  reviewGoalToday: 25,
-};
-
-const MOCK_REVIEWS = {
-  pending: 42,
-};
-
-const MOCK_LESSONS = {
-  available: 5,
-  nextTitle: 'Lesson 12: Family Members',
-  nextDescription: 'Learn words for family like お母さん, お父さん, and more',
-};
-
-const MOCK_SRS_BREAKDOWN = {
-  apprentice: 45,
-  guru: 38,
-  master: 27,
-  enlightened: 19,
-  burned: 13,
-};
-
-// Last 30 days of activity (0 = none, 1 = light, 2 = moderate, 3 = heavy)
-// TODO: Replace with real activity data from Supabase
-const MOCK_ACTIVITY: number[] = Array.from({ length: 30 }, () =>
-  Math.floor(Math.random() * 4)
-);
+import { useStreak } from '@/hooks/useStreak';
+import { useReviews } from '@/hooks/useReviews';
+import { useProgress } from '@/hooks/useProgress';
+import { useLessons } from '@/hooks/useLessons';
+import type { JLPTLevel } from '@/types/curriculum';
 
 // ─── Animation Variants ─────────────────────────────────────────────────────
 
@@ -130,17 +99,84 @@ export default function DashboardPage() {
 
   const displayName =
     profile?.display_name || profile?.username || 'Learner';
-  const totalXp = profile?.total_xp ?? MOCK_STATS.totalXp;
+  const totalXp = profile?.total_xp ?? 0;
   const currentLevel = profile?.current_level ?? 1;
-  const jlptLevel = profile?.current_jlpt_level ?? 'N5';
+  const jlptLevel = (profile?.current_jlpt_level ?? 'N5') as JLPTLevel;
   const xpProgress = useMemo(() => getXPProgress(totalXp), [totalXp]);
+  const dailyGoal = profile?.daily_goal ?? 25;
+
+  // Real data from hooks
+  const { currentStreak, isActive: isStreakActive } = useStreak(profile?.id);
+  const { dueItems } = useReviews(profile?.id);
+  const {
+    totalKanji,
+    totalVocab,
+    totalGrammar,
+    srsBreakdown: rawSrsBreakdown,
+    dailyActivity,
+    reviewsToday,
+  } = useProgress(profile?.id);
+  const { lessons } = useLessons(profile?.id, jlptLevel);
+
+  // Compute items learned
+  const itemsLearned = totalKanji + totalVocab + totalGrammar;
+
+  // Compute SRS breakdown by named stage
+  const srsBreakdown = useMemo(() => {
+    // Stages: 1-4 = apprentice, 5-6 = guru, 7 = master, 8 = enlightened, 9 = burned
+    let apprentice = 0;
+    let guru = 0;
+    let master = 0;
+    let enlightened = 0;
+    let burned = 0;
+    for (const [stage, count] of Object.entries(rawSrsBreakdown)) {
+      const s = Number(stage);
+      if (s >= 1 && s <= 4) apprentice += count;
+      else if (s >= 5 && s <= 6) guru += count;
+      else if (s === 7) master += count;
+      else if (s === 8) enlightened += count;
+      else if (s === 9) burned += count;
+    }
+    return { apprentice, guru, master, enlightened, burned };
+  }, [rawSrsBreakdown]);
 
   const srsTotal =
-    MOCK_SRS_BREAKDOWN.apprentice +
-    MOCK_SRS_BREAKDOWN.guru +
-    MOCK_SRS_BREAKDOWN.master +
-    MOCK_SRS_BREAKDOWN.enlightened +
-    MOCK_SRS_BREAKDOWN.burned;
+    srsBreakdown.apprentice +
+    srsBreakdown.guru +
+    srsBreakdown.master +
+    srsBreakdown.enlightened +
+    srsBreakdown.burned;
+
+  // Compute pending reviews count
+  const pendingReviews = dueItems.length;
+
+  // Compute next available lesson info
+  const availableLessons = useMemo(() => {
+    const available = lessons.filter((l) => l.status === 'available' || l.status === 'in_progress');
+    return available;
+  }, [lessons]);
+  const nextLesson = availableLessons[0];
+
+  // Build activity heatmap from real data (last 30 days)
+  const activityHeatmap = useMemo(() => {
+    const heatmap: number[] = [];
+    for (let i = 29; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const dateStr = d.toISOString().split('T')[0];
+      const activity = dailyActivity.find((a) => a.activityDate === dateStr);
+      if (!activity) {
+        heatmap.push(0);
+      } else {
+        const total = activity.reviewsCompleted + activity.lessonsCompleted + activity.gamesPlayed;
+        if (total === 0) heatmap.push(0);
+        else if (total <= 10) heatmap.push(1);
+        else if (total <= 30) heatmap.push(2);
+        else heatmap.push(3);
+      }
+    }
+    return heatmap;
+  }, [dailyActivity]);
 
   return (
     <motion.div
@@ -195,12 +231,12 @@ export default function DashboardPage() {
         <StatCard
           icon={<Flame className="size-5 text-orange-500" />}
           label="Streak"
-          value={`${MOCK_STATS.streak} days`}
+          value={`${currentStreak} day${currentStreak !== 1 ? 's' : ''}`}
           accent="orange"
         >
           <StreakCounter
-            currentStreak={MOCK_STATS.streak}
-            isActive={MOCK_STATS.isStreakActive}
+            currentStreak={currentStreak}
+            isActive={isStreakActive}
           />
         </StatCard>
 
@@ -215,14 +251,14 @@ export default function DashboardPage() {
         <StatCard
           icon={<BookOpen className="size-5 text-blue-500" />}
           label="Items Learned"
-          value={formatNumber(MOCK_STATS.itemsLearned)}
+          value={formatNumber(itemsLearned)}
           accent="blue"
         />
 
         <StatCard
           icon={<Target className="size-5 text-green-500" />}
           label="Today's Progress"
-          value={`${MOCK_STATS.reviewsDoneToday}/${MOCK_STATS.reviewGoalToday}`}
+          value={`${reviewsToday}/${dailyGoal}`}
           accent="green"
         >
           <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-green-100">
@@ -231,8 +267,7 @@ export default function DashboardPage() {
               initial={{ width: 0 }}
               animate={{
                 width: `${Math.min(
-                  (MOCK_STATS.reviewsDoneToday / MOCK_STATS.reviewGoalToday) *
-                    100,
+                  dailyGoal > 0 ? (reviewsToday / dailyGoal) * 100 : 0,
                   100
                 )}%`,
               }}
@@ -258,10 +293,10 @@ export default function DashboardPage() {
               <Sparkles className="size-4" />
               Reviews Due
             </div>
-            {MOCK_REVIEWS.pending > 0 ? (
+            {pendingReviews > 0 ? (
               <>
                 <p className="mt-3 text-5xl font-bold text-purple-700">
-                  {MOCK_REVIEWS.pending}
+                  {pendingReviews}
                 </p>
                 <p className="mt-1 text-sm text-purple-500">
                   items waiting for review
@@ -303,17 +338,21 @@ export default function DashboardPage() {
               <GraduationCap className="size-4" />
               New Lessons
             </div>
-            {MOCK_LESSONS.available > 0 ? (
+            {availableLessons.length > 0 ? (
               <>
                 <p className="mt-3 text-5xl font-bold text-teal-700">
-                  {MOCK_LESSONS.available}
+                  {availableLessons.length}
                 </p>
-                <p className="mt-1 text-sm font-medium text-teal-600">
-                  {MOCK_LESSONS.nextTitle}
-                </p>
-                <p className="mt-0.5 text-xs text-teal-500">
-                  {MOCK_LESSONS.nextDescription}
-                </p>
+                {nextLesson && (
+                  <>
+                    <p className="mt-1 text-sm font-medium text-teal-600">
+                      {nextLesson.title}
+                    </p>
+                    <p className="mt-0.5 text-xs text-teal-500">
+                      {nextLesson.description}
+                    </p>
+                  </>
+                )}
                 <Button
                   asChild
                   className="mt-5 rounded-full bg-gradient-to-r from-teal-500 to-blue-500 px-6 text-white shadow-md shadow-teal-500/25 hover:from-teal-600 hover:to-blue-600"
@@ -351,7 +390,7 @@ export default function DashboardPage() {
 
         {/* Stacked bar */}
         <div className="mt-5 flex h-6 w-full overflow-hidden rounded-full">
-          {Object.entries(MOCK_SRS_BREAKDOWN).map(([stage, count]) => {
+          {Object.entries(srsBreakdown).map(([stage, count]) => {
             const percent = srsTotal > 0 ? (count / srsTotal) * 100 : 0;
             const colorMap: Record<string, string> = {
               apprentice: SRS_STAGE_COLORS[1],
@@ -376,7 +415,7 @@ export default function DashboardPage() {
 
         {/* Legend */}
         <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2">
-          {Object.entries(MOCK_SRS_BREAKDOWN).map(([stage, count]) => {
+          {Object.entries(srsBreakdown).map(([stage, count]) => {
             const colorMap: Record<string, string> = {
               apprentice: SRS_STAGE_COLORS[1],
               guru: SRS_STAGE_COLORS[5],
@@ -441,7 +480,7 @@ export default function DashboardPage() {
         </p>
 
         <div className="mt-4 flex flex-wrap gap-1.5">
-          {MOCK_ACTIVITY.map((level, i) => {
+          {activityHeatmap.map((level, i) => {
             const date = new Date();
             date.setDate(date.getDate() - (29 - i));
             const dateStr = `${date.getMonth() + 1}/${date.getDate()}`;

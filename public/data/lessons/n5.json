@@ -1,0 +1,212 @@
+[
+  {
+    "id": "n5-lesson-01",
+    "title": "Numbers & Counting",
+    "description": "Learn the essential number kanji from one to ten thousand, plus counting expressions and date counters.",
+    "jlptLevel": "N5",
+    "appLevel": 1,
+    "items": {
+      "kanji": ["k-n5-001","k-n5-002","k-n5-003","k-n5-004","k-n5-005","k-n5-006","k-n5-007","k-n5-008","k-n5-009","k-n5-010","k-n5-011","k-n5-012","k-n5-013"],
+      "vocabulary": ["v-n5-001","v-n5-002","v-n5-003","v-n5-004","v-n5-005","v-n5-006","v-n5-007","v-n5-008","v-n5-009","v-n5-010","v-n5-011","v-n5-012","v-n5-013","v-n5-014","v-n5-015","v-n5-016","v-n5-017","v-n5-018","v-n5-019","v-n5-020","v-n5-021","v-n5-022","v-n5-023","v-n5-175","v-n5-176","v-n5-177","v-n5-178","v-n5-179","v-n5-180","v-n5-181","v-n5-182","v-n5-197","v-n5-198","v-n5-199","v-n5-204"],
+      "grammar": ["g-n5-001","g-n5-002","g-n5-038"]
+    },
+    "prerequisites": [],
+    "order": 1,
+    "estimatedMinutes": 25
+  },
+  {
+    "id": "n5-lesson-02",
+    "title": "Money & Calendar",
+    "description": "Learn yen, years, months, days, time expressions, and essential particles like が, を, の, and か.",
+    "jlptLevel": "N5",
+    "appLevel": 2,
+    "items": {
+      "kanji": ["k-n5-014","k-n5-015","k-n5-016","k-n5-017","k-n5-018","k-n5-019","k-n5-020"],
+      "vocabulary": ["v-n5-024","v-n5-025","v-n5-026","v-n5-027","v-n5-028","v-n5-029","v-n5-030","v-n5-031","v-n5-032","v-n5-033","v-n5-034","v-n5-035","v-n5-036","v-n5-037","v-n5-038","v-n5-186"],
+      "grammar": ["g-n5-004","g-n5-005","g-n5-011","g-n5-012"]
+    },
+    "prerequisites": ["n5-lesson-01"],
+    "order": 2,
+    "estimatedMinutes": 20
+  },
+  {
+    "id": "n5-lesson-03",
+    "title": "Time Concepts",
+    "description": "Master words for intervals, present, past, future, and frequency. Learn essential particles に, で, and へ.",
+    "jlptLevel": "N5",
+    "appLevel": 3,
+    "items": {
+      "kanji": ["k-n5-021","k-n5-022","k-n5-023","k-n5-024","k-n5-025","k-n5-026","k-n5-027","k-n5-028","k-n5-029"],
+      "vocabulary": ["v-n5-039","v-n5-040","v-n5-041","v-n5-042","v-n5-043","v-n5-044","v-n5-045","v-n5-046","v-n5-047","v-n5-048","v-n5-049","v-n5-050","v-n5-051","v-n5-052","v-n5-053","v-n5-054","v-n5-055","v-n5-056","v-n5-057","v-n5-168","v-n5-169","v-n5-195","v-n5-196","v-n5-200","v-n5-201","v-n5-202"],
+      "grammar": ["g-n5-006","g-n5-007","g-n5-008"]
+    },
+    "prerequisites": ["n5-lesson-02"],
+    "order": 3,
+    "estimatedMinutes": 25
+  },
+  {
+    "id": "n5-lesson-04",
+    "title": "Directions & Position",
+    "description": "Learn up, down, inside, outside, left, and right. Plus the particles と and も.",
+    "jlptLevel": "N5",
+    "appLevel": 4,
+    "items": {
+      "kanji": ["k-n5-030","k-n5-031","k-n5-032","k-n5-033","k-n5-034","k-n5-035"],
+      "vocabulary": ["v-n5-058","v-n5-059","v-n5-060","v-n5-061","v-n5-062","v-n5-063","v-n5-064","v-n5-065","v-n5-066","v-n5-067"],
+      "grammar": ["g-n5-009","g-n5-010"]
+    },
+    "prerequisites": ["n5-lesson-03"],
+    "order": 4,
+    "estimatedMinutes": 15
+  },
+  {
+    "id": "n5-lesson-05",
+    "title": "Compass & Geography",
+    "description": "Learn the four cardinal directions and polite verb conjugation with ます, ました, ません, and ませんでした.",
+    "jlptLevel": "N5",
+    "appLevel": 5,
+    "items": {
+      "kanji": ["k-n5-036","k-n5-037","k-n5-038","k-n5-039"],
+      "vocabulary": ["v-n5-068","v-n5-069","v-n5-070","v-n5-071","v-n5-183","v-n5-184","v-n5-185","v-n5-192","v-n5-193"],
+      "grammar": ["g-n5-013","g-n5-014","g-n5-015","g-n5-016"]
+    },
+    "prerequisites": ["n5-lesson-04"],
+    "order": 5,
+    "estimatedMinutes": 20
+  },
+  {
+    "id": "n5-lesson-06",
+    "title": "Body Parts",
+    "description": "Learn kanji for mouth, eye, ear, hand, and foot. Plus から/まで and existence expressions ある/いる.",
+    "jlptLevel": "N5",
+    "appLevel": 6,
+    "items": {
+      "kanji": ["k-n5-040","k-n5-041","k-n5-042","k-n5-043","k-n5-044"],
+      "vocabulary": ["v-n5-072","v-n5-073","v-n5-074","v-n5-075","v-n5-076","v-n5-170","v-n5-205"],
+      "grammar": ["g-n5-023","g-n5-026"]
+    },
+    "prerequisites": ["n5-lesson-05"],
+    "order": 6,
+    "estimatedMinutes": 15
+  },
+  {
+    "id": "n5-lesson-07",
+    "title": "People & Family",
+    "description": "Learn kanji for person, child, woman, man, friend, father, and mother. Plus て form and requests.",
+    "jlptLevel": "N5",
+    "appLevel": 7,
+    "items": {
+      "kanji": ["k-n5-045","k-n5-046","k-n5-047","k-n5-048","k-n5-049","k-n5-050","k-n5-051"],
+      "vocabulary": ["v-n5-077","v-n5-078","v-n5-079","v-n5-080","v-n5-081","v-n5-082","v-n5-083","v-n5-084","v-n5-085","v-n5-086"],
+      "grammar": ["g-n5-017","g-n5-019","g-n5-020"]
+    },
+    "prerequisites": ["n5-lesson-06"],
+    "order": 7,
+    "estimatedMinutes": 20
+  },
+  {
+    "id": "n5-lesson-08",
+    "title": "School & Education",
+    "description": "Learn kanji for teacher, student, school, and study. Plus ている progressive, ない form, and た form.",
+    "jlptLevel": "N5",
+    "appLevel": 8,
+    "items": {
+      "kanji": ["k-n5-052","k-n5-053","k-n5-054","k-n5-055"],
+      "vocabulary": ["v-n5-087","v-n5-088","v-n5-089","v-n5-090","v-n5-091","v-n5-092","v-n5-093","v-n5-187","v-n5-194"],
+      "grammar": ["g-n5-018","g-n5-021","g-n5-037"]
+    },
+    "prerequisites": ["n5-lesson-07"],
+    "order": 8,
+    "estimatedMinutes": 20
+  },
+  {
+    "id": "n5-lesson-09",
+    "title": "Adjectives & Descriptions",
+    "description": "Learn kanji for big, small, tall, long, new, old, many, and few. Plus たい, けど, and ましょう.",
+    "jlptLevel": "N5",
+    "appLevel": 9,
+    "items": {
+      "kanji": ["k-n5-056","k-n5-057","k-n5-058","k-n5-059","k-n5-060","k-n5-061","k-n5-062","k-n5-063"],
+      "vocabulary": ["v-n5-094","v-n5-095","v-n5-096","v-n5-097","v-n5-098","v-n5-099","v-n5-100","v-n5-101","v-n5-102","v-n5-103","v-n5-104","v-n5-105","v-n5-174","v-n5-203"],
+      "grammar": ["g-n5-022","g-n5-024","g-n5-025"]
+    },
+    "prerequisites": ["n5-lesson-08"],
+    "order": 9,
+    "estimatedMinutes": 20
+  },
+  {
+    "id": "n5-lesson-10",
+    "title": "Nature & Weather",
+    "description": "Learn kanji for name, white, mountain, river, field, sky, spirit, rain, and flower. Plus adjective conjugation and permission.",
+    "jlptLevel": "N5",
+    "appLevel": 10,
+    "items": {
+      "kanji": ["k-n5-064","k-n5-065","k-n5-066","k-n5-067","k-n5-068","k-n5-069","k-n5-070","k-n5-071","k-n5-072"],
+      "vocabulary": ["v-n5-106","v-n5-107","v-n5-108","v-n5-109","v-n5-110","v-n5-111","v-n5-112","v-n5-113","v-n5-114","v-n5-115","v-n5-173"],
+      "grammar": ["g-n5-027","g-n5-028","g-n5-040","g-n5-041"]
+    },
+    "prerequisites": ["n5-lesson-09"],
+    "order": 10,
+    "estimatedMinutes": 20
+  },
+  {
+    "id": "n5-lesson-11",
+    "title": "Transportation",
+    "description": "Learn kanji for electricity, car, station, and road. Plus comparisons, つもり, and のが好き.",
+    "jlptLevel": "N5",
+    "appLevel": 11,
+    "items": {
+      "kanji": ["k-n5-073","k-n5-074","k-n5-075","k-n5-076"],
+      "vocabulary": ["v-n5-116","v-n5-117","v-n5-118","v-n5-119","v-n5-120","v-n5-121"],
+      "grammar": ["g-n5-029","g-n5-030","g-n5-044"]
+    },
+    "prerequisites": ["n5-lesson-10"],
+    "order": 11,
+    "estimatedMinutes": 15
+  },
+  {
+    "id": "n5-lesson-12",
+    "title": "Language & Communication",
+    "description": "Learn kanji for country, language, English, speak, read, write, hear, and see. Plus と思う, ことがある, and でしょう.",
+    "jlptLevel": "N5",
+    "appLevel": 12,
+    "items": {
+      "kanji": ["k-n5-077","k-n5-078","k-n5-079","k-n5-080","k-n5-081","k-n5-082","k-n5-083","k-n5-084"],
+      "vocabulary": ["v-n5-122","v-n5-123","v-n5-124","v-n5-125","v-n5-126","v-n5-127","v-n5-128","v-n5-129","v-n5-130","v-n5-131","v-n5-132","v-n5-133","v-n5-134"],
+      "grammar": ["g-n5-031","g-n5-032","g-n5-039"]
+    },
+    "prerequisites": ["n5-lesson-11"],
+    "order": 12,
+    "estimatedMinutes": 20
+  },
+  {
+    "id": "n5-lesson-13",
+    "title": "Actions & Verbs",
+    "description": "Learn kanji for eat, drink, go, come, exit, enter, stand, rest, buy, and say. Plus 前に/後に, あげる/もらう/くれる, and 方.",
+    "jlptLevel": "N5",
+    "appLevel": 13,
+    "items": {
+      "kanji": ["k-n5-085","k-n5-086","k-n5-087","k-n5-088","k-n5-089","k-n5-090","k-n5-091","k-n5-092","k-n5-093","k-n5-094"],
+      "vocabulary": ["v-n5-135","v-n5-136","v-n5-137","v-n5-138","v-n5-139","v-n5-140","v-n5-141","v-n5-142","v-n5-143","v-n5-144","v-n5-145","v-n5-146","v-n5-147","v-n5-148","v-n5-149","v-n5-150","v-n5-171","v-n5-172","v-n5-191"],
+      "grammar": ["g-n5-033","g-n5-034","g-n5-035"]
+    },
+    "prerequisites": ["n5-lesson-12"],
+    "order": 13,
+    "estimatedMinutes": 25
+  },
+  {
+    "id": "n5-lesson-14",
+    "title": "Elements & Places",
+    "description": "Learn kanji for gold, water, fire, wood, earth, book, shop, company, and meet. Plus なる, なければならない, and ほうがいい.",
+    "jlptLevel": "N5",
+    "appLevel": 14,
+    "items": {
+      "kanji": ["k-n5-095","k-n5-096","k-n5-097","k-n5-098","k-n5-099","k-n5-100","k-n5-101","k-n5-102","k-n5-103"],
+      "vocabulary": ["v-n5-151","v-n5-152","v-n5-153","v-n5-154","v-n5-155","v-n5-156","v-n5-157","v-n5-158","v-n5-159","v-n5-160","v-n5-161","v-n5-162","v-n5-163","v-n5-164","v-n5-165","v-n5-166","v-n5-167","v-n5-188","v-n5-189","v-n5-190"],
+      "grammar": ["g-n5-036","g-n5-042","g-n5-043"]
+    },
+    "prerequisites": ["n5-lesson-13"],
+    "order": 14,
+    "estimatedMinutes": 25
+  }
+]

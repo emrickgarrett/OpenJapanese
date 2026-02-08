@@ -41,7 +41,7 @@ export function XPBar({ currentXP, level }: XPBarProps) {
 
       {/* Progress bar */}
       <div className="relative mt-3">
-        <div className="h-4 w-full overflow-hidden rounded-full bg-pink-100">
+        <div className="h-4 w-full overflow-hidden rounded-full bg-pink-100 dark:bg-pink-950/50">
           <motion.div
             className="relative h-full rounded-full bg-gradient-to-r from-pink-400 via-pink-500 to-purple-500"
             initial={{ width: 0 }}

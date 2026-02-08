@@ -17,6 +17,7 @@ import {
 import toast from 'react-hot-toast';
 
 import { useProfile } from '@/providers/ProfileProvider';
+import { useTheme as useAppTheme } from '@/providers/ThemeProvider';
 import { supabase } from '@/lib/supabase/client';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -93,19 +94,12 @@ export default function SettingsPage() {
     [updateProfile]
   );
 
+  const { setTheme: applyTheme } = useAppTheme();
+
   // Setting handlers
   const handleThemeChange = (newTheme: 'light' | 'dark' | 'auto') => {
     setTheme(newTheme);
-    // Apply theme to document
-    if (newTheme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else if (newTheme === 'light') {
-      document.documentElement.classList.remove('dark');
-    } else {
-      // Auto: check system preference
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      document.documentElement.classList.toggle('dark', prefersDark);
-    }
+    applyTheme(newTheme);
     debouncedSave({ theme: newTheme });
   };
 

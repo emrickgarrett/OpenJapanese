@@ -38,6 +38,8 @@ interface QuizQuestion {
 interface LessonFlowProps {
   lessonGroup: LessonGroup;
   items: CurriculumItem[];
+  allVocab?: VocabItem[];
+  allGrammar?: GrammarItem[];
   onComplete: (xpEarned: number) => void;
 }
 
@@ -71,6 +73,8 @@ function getItemMeanings(item: CurriculumItem): string[] {
 export default function LessonFlow({
   lessonGroup,
   items,
+  allVocab = [],
+  allGrammar = [],
   onComplete,
 }: LessonFlowProps) {
   const [phase, setPhase] = useState<LessonPhase>('intro');
@@ -300,10 +304,10 @@ export default function LessonFlow({
             exit="exit"
             transition={{ duration: 0.3 }}
           >
-            {isKanjiItem(currentItem) && <KanjiDisplay kanji={currentItem} />}
+            {isKanjiItem(currentItem) && <KanjiDisplay kanji={currentItem} allVocab={allVocab} />}
             {isVocabItem(currentItem) && <VocabDisplay vocab={currentItem} />}
             {isGrammarItem(currentItem) && (
-              <GrammarDisplay grammar={currentItem} />
+              <GrammarDisplay grammar={currentItem} allGrammar={allGrammar} />
             )}
           </motion.div>
         </AnimatePresence>

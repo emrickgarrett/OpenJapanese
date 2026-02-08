@@ -9,9 +9,12 @@ import type { GrammarItem } from '@/types/curriculum';
 
 interface GrammarDisplayProps {
   grammar: GrammarItem;
+  allGrammar?: GrammarItem[];
 }
 
-export default function GrammarDisplay({ grammar }: GrammarDisplayProps) {
+export default function GrammarDisplay({ grammar, allGrammar = [] }: GrammarDisplayProps) {
+  // Build a lookup map from grammar IDs to grammar items
+  const grammarMap = new Map(allGrammar.map((g) => [g.id, g]));
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -139,11 +142,18 @@ export default function GrammarDisplay({ grammar }: GrammarDisplayProps) {
                 Related Grammar
               </p>
               <div className="flex flex-wrap gap-2">
-                {grammar.relatedGrammar.map((related, i) => (
-                  <Badge key={i} variant="secondary">
-                    {related}
-                  </Badge>
-                ))}
+                {grammar.relatedGrammar.map((relatedId, i) => {
+                  const relatedItem = grammarMap.get(relatedId);
+                  if (relatedItem) {
+                    return (
+                      <Badge key={i} variant="secondary" className="font-japanese">
+                        {relatedItem.title}
+                      </Badge>
+                    );
+                  }
+                  // Fallback: don't render raw ID
+                  return null;
+                })}
               </div>
             </CardContent>
           </Card>

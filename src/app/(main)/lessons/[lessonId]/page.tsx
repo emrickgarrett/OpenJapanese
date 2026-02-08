@@ -18,6 +18,8 @@ import {
 import type {
   LessonGroup,
   CurriculumItem,
+  VocabItem,
+  GrammarItem,
   JLPTLevel,
 } from '@/types/curriculum';
 
@@ -29,6 +31,8 @@ export default function LessonPage() {
 
   const [lessonGroup, setLessonGroup] = useState<LessonGroup | null>(null);
   const [lessonItems, setLessonItems] = useState<CurriculumItem[]>([]);
+  const [allVocab, setAllVocab] = useState<VocabItem[]>([]);
+  const [allGrammar, setAllGrammar] = useState<GrammarItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -79,6 +83,8 @@ export default function LessonPage() {
 
         const items = getLessonItems(foundLesson, kanji, vocab, grammar);
         setLessonItems(items.all);
+        setAllVocab(vocab);
+        setAllGrammar(grammar);
       } catch (err) {
         console.error('Error loading lesson:', err);
         setError('Failed to load lesson');
@@ -192,6 +198,8 @@ export default function LessonPage() {
       <LessonFlow
         lessonGroup={lessonGroup}
         items={lessonItems}
+        allVocab={allVocab}
+        allGrammar={allGrammar}
         onComplete={handleComplete}
       />
     </motion.div>

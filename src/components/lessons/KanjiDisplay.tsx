@@ -5,13 +5,16 @@ import { Layers, PenLine } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import AudioButton from '@/components/shared/AudioButton';
-import type { KanjiItem } from '@/types/curriculum';
+import type { KanjiItem, VocabItem } from '@/types/curriculum';
 
 interface KanjiDisplayProps {
   kanji: KanjiItem;
+  allVocab?: VocabItem[];
 }
 
-export default function KanjiDisplay({ kanji }: KanjiDisplayProps) {
+export default function KanjiDisplay({ kanji, allVocab = [] }: KanjiDisplayProps) {
+  // Build a lookup map from vocab IDs to vocab items
+  const vocabMap = new Map(allVocab.map((v) => [v.id, v]));
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -123,11 +126,26 @@ export default function KanjiDisplay({ kanji }: KanjiDisplayProps) {
                 Example Words
               </p>
               <div className="flex flex-wrap gap-2">
-                {kanji.exampleWords.map((word, i) => (
-                  <Badge key={i} variant="secondary" className="font-japanese text-sm">
-                    {word}
-                  </Badge>
-                ))}
+                {kanji.exampleWords.map((wordId, i) => {
+                  const vocab = vocabMap.get(wordId);
+                  if (vocab) {
+                    return (
+                      <div key={i} className="flex items-center gap-1.5">
+                        <Badge variant="secondary" className="font-japanese text-sm gap-1">
+                          {vocab.word}
+                          <span className="text-xs font-normal text-muted-foreground">
+                            ({vocab.reading})
+                          </span>
+                        </Badge>
+                        <span className="text-xs text-muted-foreground">
+                          {vocab.meanings[0]}
+                        </span>
+                      </div>
+                    );
+                  }
+                  // Fallback: if not found in lookup, don't render the raw ID
+                  return null;
+                })}
               </div>
             </CardContent>
           </Card>

@@ -23,6 +23,7 @@ import {
 } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { useProfile } from '@/providers/ProfileProvider';
+import { useStreak } from '@/hooks/useStreak';
 
 const NAV_ITEMS = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -39,8 +40,8 @@ export default function Sidebar() {
   const [expanded, setExpanded] = useState(false);
   const { profile } = useProfile();
 
-  // Derive streak from profile if available (fallback to 0)
-  const streak = profile?.current_level ?? 0;
+  // Fetch actual streak from Supabase
+  const { currentStreak: streak } = useStreak(profile?.id);
 
   return (
     <TooltipProvider delayDuration={100}>

@@ -245,7 +245,7 @@ export default function DashboardPage() {
           label="Total XP"
           value={formatNumber(totalXp)}
           accent="yellow"
-          extra={`Level ${currentLevel}`}
+          extra={`Level ${xpProgress.currentLevel}`}
         />
 
         <StatCard

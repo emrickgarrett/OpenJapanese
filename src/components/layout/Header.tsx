@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Flame, Star } from 'lucide-react';
 import { useProfile } from '@/providers/ProfileProvider';
+import { useStreak } from '@/hooks/useStreak';
 import { cn } from '@/lib/utils';
 
 /** Maps route prefixes to human-readable page titles. */
@@ -48,6 +49,7 @@ export default function Header() {
   const avatarUrl = profile?.avatar_url;
   const displayName = profile?.display_name ?? profile?.username ?? '?';
   const initial = displayName.charAt(0).toUpperCase();
+  const { currentStreak } = useStreak(profile?.id);
 
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border bg-card/80 px-4 backdrop-blur-md md:px-6">
@@ -60,13 +62,13 @@ export default function Header() {
           <>
             {/* Streak */}
             <motion.div
-              key={`streak-${level}`}
+              key={`streak-${currentStreak}`}
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               className="flex items-center gap-1 rounded-full bg-orange-500/10 px-2.5 py-1 text-sm font-semibold text-orange-600 dark:text-orange-400"
             >
               <Flame className="h-4 w-4" />
-              <span className="hidden sm:inline">{level}</span>
+              <span className="hidden sm:inline">{currentStreak}</span>
             </motion.div>
 
             {/* XP badge */}

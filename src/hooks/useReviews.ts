@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase/client';
 import { processReview } from '@/lib/srs/engine';
 import { loadKanji, loadVocabulary, loadGrammar } from '@/lib/curriculum/loader';
-import { XP_REWARDS } from '@/lib/progression/xp';
+import { XP_REWARDS, getLevelFromXP } from '@/lib/progression/xp';
 import { SRS_STAGES } from '@/lib/srs/constants';
 import type { UserProgress } from '@/types/progress';
 import type { SRSUpdate } from '@/types/srs';
@@ -293,10 +293,14 @@ export function useReviews(profileId: string | undefined): UseReviewsReturn {
         .single();
 
       if (profileData) {
+        const newTotalXp = profileData.total_xp + totalXpEarned;
+        const newLevel = getLevelFromXP(newTotalXp);
+
         await supabase
           .from('profiles')
           .update({
-            total_xp: profileData.total_xp + totalXpEarned,
+            total_xp: newTotalXp,
+            current_level: newLevel,
             updated_at: new Date().toISOString(),
           })
           .eq('id', profileId);

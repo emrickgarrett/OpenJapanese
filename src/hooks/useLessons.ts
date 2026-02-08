@@ -9,7 +9,7 @@ import {
   loadGrammar,
   getLessonItems,
 } from '@/lib/curriculum/loader';
-import { XP_REWARDS } from '@/lib/progression/xp';
+import { XP_REWARDS, getLevelFromXP } from '@/lib/progression/xp';
 import type {
   LessonGroup,
   JLPTLevel,
@@ -191,10 +191,6 @@ export function useLessons(
       // First review in 4 hours (Apprentice 1)
       const nextReview = new Date(now.getTime() + 4 * 60 * 60 * 1000);
 
-      // Find the lesson to get its JLPT level
-      const lesson = lessons.find((l) => l.id === lessonId);
-      const level = lesson?.jlptLevel ?? jlptLevel;
-
       // Create user_progress entries for each new item
       for (const item of itemIds) {
         // Check if progress already exists (upsert)
@@ -207,11 +203,10 @@ export function useLessons(
           .single();
 
         if (!existing) {
-          await supabase.from('user_progress').insert({
+          const { error: insertError } = await supabase.from('user_progress').insert({
             profile_id: profileId,
             item_type: item.type,
             item_id: item.id,
-            jlpt_level: level,
             srs_stage: 1,
             ease_factor: 2.5,
             interval_days: 0.167, // ~4 hours
@@ -219,6 +214,10 @@ export function useLessons(
             next_review_at: nextReview.toISOString(),
             unlocked_at: now.toISOString(),
           });
+
+          if (insertError) {
+            console.error('Error inserting user_progress:', insertError);
+          }
         }
       }
 
@@ -233,10 +232,14 @@ export function useLessons(
         .single();
 
       if (profileData) {
+        const newTotalXp = profileData.total_xp + xpEarned;
+        const newLevel = getLevelFromXP(newTotalXp);
+
         await supabase
           .from('profiles')
           .update({
-            total_xp: profileData.total_xp + xpEarned,
+            total_xp: newTotalXp,
+            current_level: newLevel,
             updated_at: new Date().toISOString(),
           })
           .eq('id', profileId);

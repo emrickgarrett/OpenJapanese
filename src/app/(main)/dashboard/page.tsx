@@ -65,15 +65,15 @@ function getJapaneseDateString(): string {
 function getActivityColor(level: number): string {
   switch (level) {
     case 0:
-      return 'bg-pink-100';
+      return 'bg-pink-100 dark:bg-pink-950/40';
     case 1:
-      return 'bg-pink-300';
+      return 'bg-pink-300 dark:bg-pink-800/60';
     case 2:
-      return 'bg-pink-500';
+      return 'bg-pink-500 dark:bg-pink-600';
     case 3:
-      return 'bg-pink-700';
+      return 'bg-pink-700 dark:bg-pink-500';
     default:
-      return 'bg-pink-100';
+      return 'bg-pink-100 dark:bg-pink-950/40';
   }
 }
 
@@ -261,7 +261,7 @@ export default function DashboardPage() {
           value={`${reviewsToday}/${dailyGoal}`}
           accent="green"
         >
-          <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-green-100">
+          <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-green-100 dark:bg-green-950/50">
             <motion.div
               className="h-full rounded-full bg-gradient-to-r from-green-400 to-emerald-500"
               initial={{ width: 0 }}
@@ -286,19 +286,19 @@ export default function DashboardPage() {
         <motion.div
           whileHover={{ y: -4 }}
           transition={{ duration: 0.2 }}
-          className="relative overflow-hidden rounded-2xl border border-purple-200/60 bg-gradient-to-br from-purple-50 to-pink-50 p-6 shadow-sm transition-shadow hover:shadow-lg sm:p-8"
+          className="relative overflow-hidden rounded-2xl border border-purple-200/60 bg-gradient-to-br from-purple-50 to-pink-50 dark:border-purple-800/40 dark:from-purple-950/40 dark:to-pink-950/30 p-6 shadow-sm transition-shadow hover:shadow-lg sm:p-8"
         >
           <div className="relative z-10">
-            <div className="flex items-center gap-2 text-sm font-medium text-purple-600">
+            <div className="flex items-center gap-2 text-sm font-medium text-purple-600 dark:text-purple-400">
               <Sparkles className="size-4" />
               Reviews Due
             </div>
             {pendingReviews > 0 ? (
               <>
-                <p className="mt-3 text-5xl font-bold text-purple-700">
+                <p className="mt-3 text-5xl font-bold text-purple-700 dark:text-purple-300">
                   {pendingReviews}
                 </p>
-                <p className="mt-1 text-sm text-purple-500">
+                <p className="mt-1 text-sm text-purple-500 dark:text-purple-400">
                   items waiting for review
                 </p>
                 <Button
@@ -314,41 +314,41 @@ export default function DashboardPage() {
             ) : (
               <div className="mt-4 flex flex-col items-center py-4">
                 <PartyPopper className="size-12 text-purple-400" />
-                <p className="mt-2 text-lg font-semibold text-purple-700">
+                <p className="mt-2 text-lg font-semibold text-purple-700 dark:text-purple-300">
                   All caught up!
                 </p>
-                <p className="text-sm text-purple-500">
+                <p className="text-sm text-purple-500 dark:text-purple-400">
                   Great job! Come back later for more.
                 </p>
               </div>
             )}
           </div>
-          <div className="pointer-events-none absolute -bottom-6 -right-6 h-32 w-32 rounded-full bg-purple-200/30" />
-          <div className="pointer-events-none absolute -top-4 right-8 h-20 w-20 rounded-full bg-pink-200/20" />
+          <div className="pointer-events-none absolute -bottom-6 -right-6 h-32 w-32 rounded-full bg-purple-200/30 dark:bg-purple-800/20" />
+          <div className="pointer-events-none absolute -top-4 right-8 h-20 w-20 rounded-full bg-pink-200/20 dark:bg-pink-800/15" />
         </motion.div>
 
         {/* Lessons card */}
         <motion.div
           whileHover={{ y: -4 }}
           transition={{ duration: 0.2 }}
-          className="relative overflow-hidden rounded-2xl border border-teal-200/60 bg-gradient-to-br from-teal-50 to-blue-50 p-6 shadow-sm transition-shadow hover:shadow-lg sm:p-8"
+          className="relative overflow-hidden rounded-2xl border border-teal-200/60 bg-gradient-to-br from-teal-50 to-blue-50 dark:border-teal-800/40 dark:from-teal-950/40 dark:to-blue-950/30 p-6 shadow-sm transition-shadow hover:shadow-lg sm:p-8"
         >
           <div className="relative z-10">
-            <div className="flex items-center gap-2 text-sm font-medium text-teal-600">
+            <div className="flex items-center gap-2 text-sm font-medium text-teal-600 dark:text-teal-400">
               <GraduationCap className="size-4" />
               New Lessons
             </div>
             {availableLessons.length > 0 ? (
               <>
-                <p className="mt-3 text-5xl font-bold text-teal-700">
+                <p className="mt-3 text-5xl font-bold text-teal-700 dark:text-teal-300">
                   {availableLessons.length}
                 </p>
                 {nextLesson && (
                   <>
-                    <p className="mt-1 text-sm font-medium text-teal-600">
+                    <p className="mt-1 text-sm font-medium text-teal-600 dark:text-teal-400">
                       {nextLesson.title}
                     </p>
-                    <p className="mt-0.5 text-xs text-teal-500">
+                    <p className="mt-0.5 text-xs text-teal-500 dark:text-teal-400">
                       {nextLesson.description}
                     </p>
                   </>
@@ -371,8 +371,8 @@ export default function DashboardPage() {
               />
             )}
           </div>
-          <div className="pointer-events-none absolute -bottom-6 -right-6 h-32 w-32 rounded-full bg-teal-200/30" />
-          <div className="pointer-events-none absolute -top-4 right-8 h-20 w-20 rounded-full bg-blue-200/20" />
+          <div className="pointer-events-none absolute -bottom-6 -right-6 h-32 w-32 rounded-full bg-teal-200/30 dark:bg-teal-800/20" />
+          <div className="pointer-events-none absolute -top-4 right-8 h-20 w-20 rounded-full bg-blue-200/20 dark:bg-blue-800/15" />
         </motion.div>
       </motion.div>
 
@@ -449,21 +449,21 @@ export default function DashboardPage() {
           icon={<Gamepad2 className="size-6 text-purple-500" />}
           title="Mini-Games"
           description="Practice with fun games"
-          className="border-purple-200/60 bg-gradient-to-br from-purple-50 to-fuchsia-50"
+          className="border-purple-200/60 bg-gradient-to-br from-purple-50 to-fuchsia-50 dark:border-purple-800/40 dark:from-purple-950/40 dark:to-fuchsia-950/30"
         />
         <QuickAccessCard
           href="/leaderboard"
           icon={<Trophy className="size-6 text-amber-500" />}
           title="Leaderboard"
           description="See how you rank"
-          className="border-amber-200/60 bg-gradient-to-br from-amber-50 to-orange-50"
+          className="border-amber-200/60 bg-gradient-to-br from-amber-50 to-orange-50 dark:border-amber-800/40 dark:from-amber-950/40 dark:to-orange-950/30"
         />
         <QuickAccessCard
           href="/profile"
           icon={<BarChart3 className="size-6 text-blue-500" />}
           title="Profile & Stats"
           description="View your progress"
-          className="border-blue-200/60 bg-gradient-to-br from-blue-50 to-cyan-50"
+          className="border-blue-200/60 bg-gradient-to-br from-blue-50 to-cyan-50 dark:border-blue-800/40 dark:from-blue-950/40 dark:to-cyan-950/30"
         />
       </motion.div>
 
@@ -535,10 +535,10 @@ function StatCard({
   children?: React.ReactNode;
 }) {
   const bgMap: Record<string, string> = {
-    orange: 'bg-orange-50 border-orange-200/60',
-    yellow: 'bg-yellow-50 border-yellow-200/60',
-    blue: 'bg-blue-50 border-blue-200/60',
-    green: 'bg-green-50 border-green-200/60',
+    orange: 'bg-orange-50 border-orange-200/60 dark:bg-orange-950/30 dark:border-orange-800/40',
+    yellow: 'bg-yellow-50 border-yellow-200/60 dark:bg-yellow-950/30 dark:border-yellow-800/40',
+    blue: 'bg-blue-50 border-blue-200/60 dark:bg-blue-950/30 dark:border-blue-800/40',
+    green: 'bg-green-50 border-green-200/60 dark:bg-green-950/30 dark:border-green-800/40',
   };
 
   return (

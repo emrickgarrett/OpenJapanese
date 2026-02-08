@@ -91,6 +91,12 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     setProfile(data as Profile);
     setIsNewUser(false);
 
+    // Sync theme preference to localStorage so the blocking script
+    // can apply it before first paint on future page loads
+    if (data.theme) {
+      localStorage.setItem('oj_theme', data.theme);
+    }
+
     // Update last_active_at in the background
     supabase
       .from('profiles')

@@ -199,7 +199,7 @@ export default function SetupPage() {
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-4 py-12">
       {/* Background */}
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-pink-50 via-white to-purple-50" />
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-pink-50 via-white to-purple-50 dark:from-pink-950/20 dark:via-background dark:to-purple-950/20" />
 
       <div className="relative z-10 w-full max-w-lg">
         {/* Progress indicator */}
@@ -218,7 +218,7 @@ export default function SetupPage() {
                       ? 'bg-pink-500 text-white'
                       : i === step
                         ? 'bg-gradient-to-r from-pink-500 to-purple-500 text-white shadow-lg shadow-pink-500/25'
-                        : 'bg-pink-100 text-pink-400'
+                        : 'bg-pink-100 text-pink-400 dark:bg-pink-950/40 dark:text-pink-500'
                   )}
                   animate={i === step ? { scale: [1, 1.1, 1] } : {}}
                   transition={{ duration: 0.3 }}
@@ -229,7 +229,7 @@ export default function SetupPage() {
                   <div
                     className={cn(
                       'h-0.5 w-12 rounded-full transition-colors',
-                      i < step ? 'bg-pink-500' : 'bg-pink-100'
+                      i < step ? 'bg-pink-500' : 'bg-pink-100 dark:bg-pink-950/40'
                     )}
                   />
                 )}
@@ -253,9 +253,9 @@ export default function SetupPage() {
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
-              className="relative rounded-2xl border border-pink-200/60 bg-white/90 px-5 py-3 shadow-sm backdrop-blur-sm"
+              className="relative rounded-2xl border border-pink-200/60 bg-white/90 px-5 py-3 shadow-sm backdrop-blur-sm dark:border-pink-800/40 dark:bg-card/90"
             >
-              <div className="absolute -left-2 top-3 h-3 w-3 rotate-45 border-b border-l border-pink-200/60 bg-white/90" />
+              <div className="absolute -left-2 top-3 h-3 w-3 rotate-45 border-b border-l border-pink-200/60 bg-white/90 dark:border-pink-800/40 dark:bg-card/90" />
               <p className="text-sm font-medium text-foreground">
                 {YUKI_MESSAGES[step]}
               </p>
@@ -312,7 +312,7 @@ export default function SetupPage() {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600"
+              className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600 dark:border-red-800/40 dark:bg-red-950/30 dark:text-red-400"
             >
               {submitError}
             </motion.div>
@@ -394,8 +394,8 @@ function StepName({
           placeholder="e.g. sakura_fan"
           maxLength={20}
           className={cn(
-            'h-12 rounded-xl border-pink-200 bg-white/80 text-base backdrop-blur-sm focus-visible:border-pink-400 focus-visible:ring-pink-400/30',
-            error && 'border-red-300 focus-visible:border-red-400 focus-visible:ring-red-400/30'
+            'h-12 rounded-xl border-pink-200 bg-white/80 text-base backdrop-blur-sm focus-visible:border-pink-400 focus-visible:ring-pink-400/30 dark:border-pink-800/40 dark:bg-card/80',
+            error && 'border-red-300 focus-visible:border-red-400 focus-visible:ring-red-400/30 dark:border-red-700'
           )}
         />
         {error && (
@@ -426,7 +426,7 @@ function StepName({
           onChange={(e) => onDisplayNameChange(e.target.value)}
           placeholder="e.g. Sakura"
           maxLength={30}
-          className="h-12 rounded-xl border-pink-200 bg-white/80 text-base backdrop-blur-sm focus-visible:border-pink-400 focus-visible:ring-pink-400/30"
+          className="h-12 rounded-xl border-pink-200 bg-white/80 text-base backdrop-blur-sm focus-visible:border-pink-400 focus-visible:ring-pink-400/30 dark:border-pink-800/40 dark:bg-card/80"
         />
         <p className="text-xs text-muted-foreground">
           How Yuki will greet you. Defaults to your username.
@@ -457,8 +457,8 @@ function StepAvatar({
             className={cn(
               'flex h-16 w-full items-center justify-center rounded-2xl border-2 text-3xl transition-all',
               selected === avatar.emoji
-                ? 'border-pink-500 bg-pink-50 shadow-lg shadow-pink-500/20'
-                : 'border-pink-100 bg-white/80 hover:border-pink-300 hover:bg-pink-50/50'
+                ? 'border-pink-500 bg-pink-50 shadow-lg shadow-pink-500/20 dark:bg-pink-950/40'
+                : 'border-pink-100 bg-white/80 hover:border-pink-300 hover:bg-pink-50/50 dark:border-pink-900/40 dark:bg-card/80 dark:hover:border-pink-700 dark:hover:bg-pink-950/30'
             )}
             aria-label={avatar.label}
           >
@@ -500,8 +500,8 @@ function StepLevel({
           className={cn(
             'flex w-full items-start gap-4 rounded-2xl border-2 p-4 text-left transition-all',
             selected === level.id
-              ? 'border-pink-500 bg-pink-50 shadow-lg shadow-pink-500/15'
-              : 'border-pink-100 bg-white/80 hover:border-pink-300 hover:bg-pink-50/50'
+              ? 'border-pink-500 bg-pink-50 shadow-lg shadow-pink-500/15 dark:bg-pink-950/40'
+              : 'border-pink-100 bg-white/80 hover:border-pink-300 hover:bg-pink-50/50 dark:border-pink-900/40 dark:bg-card/80 dark:hover:border-pink-700 dark:hover:bg-pink-950/30'
           )}
         >
           <span className="mt-0.5 text-2xl" role="img" aria-hidden="true">
@@ -510,7 +510,7 @@ function StepLevel({
           <div className="flex-1">
             <div className="flex items-center gap-2">
               <p className="font-semibold text-foreground">{level.title}</p>
-              <span className="rounded-full bg-pink-100 px-2 py-0.5 text-xs font-medium text-pink-600">
+              <span className="rounded-full bg-pink-100 px-2 py-0.5 text-xs font-medium text-pink-600 dark:bg-pink-950/50 dark:text-pink-400">
                 {level.jlptLevel}
               </span>
             </div>

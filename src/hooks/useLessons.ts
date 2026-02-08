@@ -191,34 +191,28 @@ export function useLessons(
       // First review in 4 hours (Apprentice 1)
       const nextReview = new Date(now.getTime() + 4 * 60 * 60 * 1000);
 
-      // Create user_progress entries for each new item
-      for (const item of itemIds) {
-        // Check if progress already exists (upsert)
-        const { data: existing } = await supabase
-          .from('user_progress')
-          .select('id')
-          .eq('profile_id', profileId)
-          .eq('item_type', item.type)
-          .eq('item_id', item.id)
-          .single();
+      // Create user_progress entries for each new item (skip duplicates)
+      const newRows = itemIds.map((item) => ({
+        profile_id: profileId,
+        item_type: item.type,
+        item_id: item.id,
+        srs_stage: 1,
+        ease_factor: 2.5,
+        interval_days: 0.167, // ~4 hours
+        repetitions: 0,
+        next_review_at: nextReview.toISOString(),
+        unlocked_at: now.toISOString(),
+      }));
 
-        if (!existing) {
-          const { error: insertError } = await supabase.from('user_progress').insert({
-            profile_id: profileId,
-            item_type: item.type,
-            item_id: item.id,
-            srs_stage: 1,
-            ease_factor: 2.5,
-            interval_days: 0.167, // ~4 hours
-            repetitions: 0,
-            next_review_at: nextReview.toISOString(),
-            unlocked_at: now.toISOString(),
-          });
+      const { error: insertError } = await supabase
+        .from('user_progress')
+        .upsert(newRows, {
+          onConflict: 'profile_id,item_type,item_id',
+          ignoreDuplicates: true,
+        });
 
-          if (insertError) {
-            console.error('Error inserting user_progress:', insertError);
-          }
-        }
+      if (insertError) {
+        console.error('Error inserting user_progress:', insertError);
       }
 
       // Calculate XP earned

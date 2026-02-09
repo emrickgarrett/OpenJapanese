@@ -7,7 +7,6 @@ import { cn } from '@/lib/utils';
 import {
   speakJapanese,
   loadVoices,
-  isSpeechSupported,
 } from '@/lib/audio/speech';
 
 interface AudioButtonProps {
@@ -24,25 +23,19 @@ export default function AudioButton({
   const [isPlaying, setIsPlaying] = useState(false);
   const [isAvailable, setIsAvailable] = useState(true);
 
-  // Pre-load voices on mount so they are ready when the user clicks
+  // Pre-load voices on mount so they are ready when the user clicks.
+  // We no longer disable the button when voices are empty because the
+  // Google Translate TTS fallback is always available.
   useEffect(() => {
-    if (!isSpeechSupported()) {
-      setIsAvailable(false);
-      return;
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      loadVoices();
     }
-
-    // Kick off voice loading early
-    loadVoices().then((voices) => {
-      // If the browser has speech synthesis but no voices at all,
-      // mark as unavailable
-      if (voices.length === 0) {
-        setIsAvailable(false);
-      }
-    });
+    // The button stays enabled regardless — speakJapanese() handles
+    // the fallback internally.
   }, []);
 
   const speak = useCallback(async () => {
-    if (!isAvailable) return;
+    if (!isAvailable || isPlaying) return;
 
     const ok = await speakJapanese({
       text,
@@ -55,7 +48,7 @@ export default function AudioButton({
     if (!ok) {
       setIsAvailable(false);
     }
-  }, [text, lang, isAvailable]);
+  }, [text, lang, isAvailable, isPlaying]);
 
   if (!isAvailable) {
     return (

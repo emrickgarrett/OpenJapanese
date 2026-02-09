@@ -102,36 +102,33 @@ export default function LessonPage() {
 
   // Handle lesson completion
   const handleComplete = useCallback(
-    async (_xpEarned: number) => {
-      if (!lessonGroup || !profile?.id) {
-        router.push('/lessons');
-        return;
-      }
-
-      try {
-        // Build item IDs with types
-        const itemIds: { id: string; type: string }[] = [
-          ...lessonGroup.items.kanji.map((id) => ({ id, type: 'kanji' })),
-          ...lessonGroup.items.vocabulary.map((id) => ({
-            id,
-            type: 'vocabulary',
-          })),
-          ...lessonGroup.items.grammar.map((id) => ({ id, type: 'grammar' })),
-        ];
-
-        await completeLesson(lessonGroup.id, itemIds);
-        await refreshProfile();
-
-        // Check achievements after lesson completion
-        const newlyUnlocked = await checkAfterAction();
-        for (const achievement of newlyUnlocked) {
-          triggerReaction('achievement.unlocked', { name: achievement.name });
-        }
-      } catch (err) {
-        console.error('Error completing lesson:', err);
-      }
-
+    (_xpEarned: number) => {
+      // Navigate immediately so the UI feels responsive
       router.push('/lessons');
+
+      if (!lessonGroup || !profile?.id) return;
+
+      // Fire-and-forget: persist progress, refresh profile, check achievements
+      const itemIds: { id: string; type: string }[] = [
+        ...lessonGroup.items.kanji.map((id) => ({ id, type: 'kanji' })),
+        ...lessonGroup.items.vocabulary.map((id) => ({
+          id,
+          type: 'vocabulary',
+        })),
+        ...lessonGroup.items.grammar.map((id) => ({ id, type: 'grammar' })),
+      ];
+
+      completeLesson(lessonGroup.id, itemIds)
+        .then(() => refreshProfile())
+        .then(() => checkAfterAction())
+        .then((newlyUnlocked) => {
+          for (const achievement of newlyUnlocked) {
+            triggerReaction('achievement.unlocked', { name: achievement.name });
+          }
+        })
+        .catch((err) => {
+          console.error('Error completing lesson:', err);
+        });
     },
     [lessonGroup, profile?.id, completeLesson, refreshProfile, checkAfterAction, triggerReaction, router]
   );

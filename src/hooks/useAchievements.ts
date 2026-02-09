@@ -3,69 +3,67 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase/client';
 import { ACHIEVEMENTS } from '@/lib/achievements/definitions';
-import type { AchievementDefinition, UnlockedAchievement, AchievementCondition } from '@/types/achievement';
-
-interface AchievementContext {
-  itemsLearned: number;
-  itemsBurned: number;
-  streakDays: number;
-  reviewsCompleted: number;
-  perfectReviews: number;
-  gamesPlayed: number;
-  kanjiCount: number;
-  vocabCount: number;
-  appLevel: number;
-  jlptLevel: string;
-}
-
-function checkCondition(condition: AchievementCondition, ctx: AchievementContext): boolean {
-  switch (condition.type) {
-    case 'items_learned':
-      return ctx.itemsLearned >= condition.count;
-    case 'items_burned':
-      return ctx.itemsBurned >= condition.count;
-    case 'streak_days':
-      return ctx.streakDays >= condition.count;
-    case 'reviews_completed':
-      return ctx.reviewsCompleted >= condition.count;
-    case 'perfect_reviews':
-      return ctx.perfectReviews >= condition.count;
-    case 'games_played':
-      return ctx.gamesPlayed >= condition.count;
-    case 'game_perfect':
-      // Game perfect achievements are unlocked via explicit calls, not stat checks
-      return false;
-    case 'jlpt_level': {
-      const levels = ['N5', 'N4', 'N3', 'N2', 'N1'];
-      const currentIdx = levels.indexOf(ctx.jlptLevel);
-      const requiredIdx = levels.indexOf(condition.level);
-      return currentIdx >= requiredIdx && requiredIdx >= 0;
-    }
-    case 'app_level':
-      return ctx.appLevel >= condition.level;
-    case 'kanji_count':
-      return ctx.kanjiCount >= condition.count;
-    case 'vocab_count':
-      return ctx.vocabCount >= condition.count;
-    case 'speed_review':
-      // Speed reviews are unlocked via explicit calls during review sessions
-      return false;
-    default:
-      return false;
-  }
-}
+import { evaluateCondition, type AchievementContext } from '@/lib/achievements/checker';
+import { getLevelFromXP } from '@/lib/progression/xp';
+import type { AchievementDefinition, UnlockedAchievement } from '@/types/achievement';
+import type { GameType } from '@/types/game';
 
 interface UseAchievementsReturn {
   unlockedAchievements: UnlockedAchievement[];
-  checkAndUnlock: (ctx: AchievementContext) => Promise<AchievementDefinition[]>;
+  /** Check achievements after any user action. Gathers stats from DB automatically. */
+  checkAfterAction: (overrides?: Partial<AchievementContext>) => Promise<AchievementDefinition[]>;
   isLoading: boolean;
+}
+
+/**
+ * Build an AchievementContext from the user's Supabase data.
+ * Gathers all stats needed to evaluate every achievement condition.
+ */
+async function buildContext(profileId: string): Promise<AchievementContext> {
+  const [profileRes, progressRes, streakRes, dailyRes] = await Promise.all([
+    supabase.from('profiles').select('total_xp').eq('id', profileId).single(),
+    supabase.from('user_progress').select('item_type, srs_stage').eq('profile_id', profileId),
+    supabase.from('streaks').select('current_streak').eq('profile_id', profileId).single(),
+    supabase.from('daily_activity').select('reviews_completed, games_played').eq('profile_id', profileId),
+  ]);
+
+  const profile = profileRes.data;
+  const progress = progressRes.data ?? [];
+  const dailyRows = dailyRes.data ?? [];
+
+  const itemsLearned = progress.length;
+  const kanjiCount = progress.filter((p) => p.item_type === 'kanji').length;
+  const vocabCount = progress.filter((p) => p.item_type === 'vocabulary').length;
+  const itemsBurned = progress.filter((p) => p.srs_stage === 9).length;
+
+  const totalReviews = dailyRows.reduce((sum, r) => sum + (r.reviews_completed ?? 0), 0);
+  const totalGamesPlayed = dailyRows.reduce((sum, r) => sum + (r.games_played ?? 0), 0);
+
+  const appLevel = profile ? getLevelFromXP(profile.total_xp) : 0;
+  const streakDays = streakRes.data?.current_streak ?? 0;
+
+  return {
+    itemsLearned,
+    itemsBurned,
+    streakDays,
+    reviewsCompleted: totalReviews,
+    consecutiveCorrect: 0,
+    gamesPlayed: totalGamesPlayed,
+    kanjiCount,
+    vocabCount,
+    gameScores: {},
+    gameTypesPlayed: new Set<GameType>(),
+    appLevel,
+    jlptLevelsMastered: new Set<string>(),
+    speedReviewBests: new Set<string>(),
+  };
 }
 
 export function useAchievements(profileId: string | undefined): UseAchievementsReturn {
   const [unlockedAchievements, setUnlockedAchievements] = useState<UnlockedAchievement[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Fetch unlocked achievements from Supabase
+  // Fetch unlocked achievements from Supabase on mount
   useEffect(() => {
     if (!profileId) {
       setIsLoading(false);
@@ -103,57 +101,73 @@ export function useAchievements(profileId: string | undefined): UseAchievementsR
     fetchAchievements();
   }, [profileId]);
 
-  // Check all achievements against current context and unlock new ones
-  const checkAndUnlock = useCallback(
-    async (ctx: AchievementContext): Promise<AchievementDefinition[]> => {
+  /**
+   * Check all achievements against current user stats from DB.
+   * Pass optional overrides for context fields not stored in DB
+   * (e.g. gameScores for a game that was just completed).
+   */
+  const checkAfterAction = useCallback(
+    async (overrides?: Partial<AchievementContext>): Promise<AchievementDefinition[]> => {
       if (!profileId) return [];
 
-      const unlockedKeys = new Set(unlockedAchievements.map((ua) => ua.achievementKey));
-      const newlyUnlocked: AchievementDefinition[] = [];
+      try {
+        const ctx = await buildContext(profileId);
 
-      for (const achievement of ACHIEVEMENTS) {
-        // Skip already unlocked
-        if (unlockedKeys.has(achievement.key)) continue;
+        // Merge overrides (e.g. game scores from current session)
+        if (overrides) {
+          Object.assign(ctx, overrides);
+        }
 
-        // Check if condition is met
-        if (checkCondition(achievement.condition, ctx)) {
-          // Insert into Supabase
-          const { data, error } = await supabase
-            .from('unlocked_achievements')
-            .insert({
-              profile_id: profileId,
-              achievement_key: achievement.key,
-              unlocked_at: new Date().toISOString(),
-            })
-            .select('*')
-            .single();
+        const unlockedKeys = new Set(unlockedAchievements.map((ua) => ua.achievementKey));
+        const newlyUnlocked: AchievementDefinition[] = [];
 
-          if (error) {
-            console.error(`Error unlocking achievement ${achievement.key}:`, error);
-            continue;
-          }
+        for (const achievement of ACHIEVEMENTS) {
+          if (unlockedKeys.has(achievement.key)) continue;
 
-          if (data) {
-            const newUnlocked: UnlockedAchievement = {
-              id: data.id,
-              profileId: data.profile_id,
-              achievementKey: data.achievement_key,
-              unlockedAt: data.unlocked_at,
-            };
-            setUnlockedAchievements((prev) => [...prev, newUnlocked]);
-            newlyUnlocked.push(achievement);
+          if (evaluateCondition(achievement.condition, ctx)) {
+            const { data, error } = await supabase
+              .from('unlocked_achievements')
+              .insert({
+                profile_id: profileId,
+                achievement_key: achievement.key,
+                unlocked_at: new Date().toISOString(),
+              })
+              .select('*')
+              .single();
+
+            if (error) {
+              // Duplicate key is fine (race condition), skip silently
+              if (error.code !== '23505') {
+                console.error(`Error unlocking achievement ${achievement.key}:`, error);
+              }
+              continue;
+            }
+
+            if (data) {
+              const newUnlocked: UnlockedAchievement = {
+                id: data.id,
+                profileId: data.profile_id,
+                achievementKey: data.achievement_key,
+                unlockedAt: data.unlocked_at,
+              };
+              setUnlockedAchievements((prev) => [...prev, newUnlocked]);
+              newlyUnlocked.push(achievement);
+            }
           }
         }
-      }
 
-      return newlyUnlocked;
+        return newlyUnlocked;
+      } catch (err) {
+        console.error('Failed to check achievements:', err);
+        return [];
+      }
     },
     [profileId, unlockedAchievements]
   );
 
   return {
     unlockedAchievements,
-    checkAndUnlock,
+    checkAfterAction,
     isLoading,
   };
 }

@@ -1,11 +1,15 @@
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { Star, RotateCcw, ArrowLeft, Trophy, Target, Clock, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { GameType } from '@/types/game';
+import { useProfile } from '@/providers/ProfileProvider';
+import { useAchievements } from '@/hooks/useAchievements';
+import { useMascot } from '@/hooks/useMascot';
+import { trackDailyActivity } from '@/lib/supabase/daily-activity';
 import ReactConfetti from 'react-confetti';
 
 interface GameResultsProps {
@@ -28,9 +32,13 @@ export default function GameResults({
   onPlayAgain,
 }: GameResultsProps) {
   const router = useRouter();
+  const { profile } = useProfile();
+  const { checkAfterAction } = useAchievements(profile?.id);
+  const { triggerReaction } = useMascot();
   const [displayScore, setDisplayScore] = useState(0);
   const [showConfetti, setShowConfetti] = useState(false);
   const [windowSize, setWindowSize] = useState({ width: 0, height: 0 });
+  const achievementsCheckedRef = useRef(false);
 
   const stars = useMemo(() => {
     if (accuracy >= 80) return 3;
@@ -44,6 +52,34 @@ export default function GameResults({
 
   const correctCount = Math.round((accuracy / 100) * (score / 10 || 1));
   const totalCount = Math.round(score / 10 || 1);
+
+  // Check achievements & track daily activity when game results are shown
+  useEffect(() => {
+    if (!profile?.id || achievementsCheckedRef.current) return;
+    achievementsCheckedRef.current = true;
+
+    const checkAchievements = async () => {
+      try {
+        // Track game in daily activity
+        await trackDailyActivity(profile.id, { gamesPlayed: 1 });
+
+        // Check achievements with game-specific overrides
+        const gameScore = accuracy / 100;
+        const newlyUnlocked = await checkAfterAction({
+          gameScores: { [gameType]: gameScore },
+          gameTypesPlayed: new Set([gameType]),
+        });
+
+        for (const achievement of newlyUnlocked) {
+          triggerReaction('achievement.unlocked', { name: achievement.name });
+        }
+      } catch (err) {
+        console.error('Error checking achievements after game:', err);
+      }
+    };
+
+    checkAchievements();
+  }, [profile?.id, gameType, accuracy, checkAfterAction, triggerReaction]);
 
   useEffect(() => {
     setWindowSize({

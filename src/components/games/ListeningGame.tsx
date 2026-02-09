@@ -11,7 +11,6 @@ import { XP_REWARDS } from '@/lib/progression/xp';
 import {
   speakJapanese,
   loadVoices,
-  isSpeechSupported,
 } from '@/lib/audio/speech';
 
 interface ListeningItem {
@@ -61,18 +60,13 @@ export default function ListeningGame({
   const [startTime] = useState(Date.now());
   const [isSpeechAvailable, setIsSpeechAvailable] = useState(true);
 
-  // Pre-load voices on mount so they are ready for playback
+  // Pre-load voices on mount so they are ready for playback.
+  // The button stays available because speakJapanese() has a
+  // Google Translate TTS fallback when no native voices exist.
   useEffect(() => {
-    if (!isSpeechSupported()) {
-      setIsSpeechAvailable(false);
-      return;
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      loadVoices();
     }
-
-    loadVoices().then((voices) => {
-      if (voices.length === 0) {
-        setIsSpeechAvailable(false);
-      }
-    });
   }, []);
 
   const generateQuestions = useCallback(() => {

@@ -5,6 +5,8 @@ import { Loader2, Inbox, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ReviewSession from '@/components/reviews/ReviewSession';
 import { useReviews } from '@/hooks/useReviews';
+import { useAchievements } from '@/hooks/useAchievements';
+import { useMascot } from '@/hooks/useMascot';
 import { useProfile } from '@/providers/ProfileProvider';
 
 export default function ReviewsPage() {
@@ -12,10 +14,22 @@ export default function ReviewsPage() {
   const { dueItems, isLoading, submitReview, refreshReviews } = useReviews(
     profile?.id
   );
+  const { checkAfterAction } = useAchievements(profile?.id);
+  const { triggerReaction } = useMascot();
 
   const handleComplete = async () => {
     await refreshProfile();
     await refreshReviews();
+
+    // Check achievements after review session
+    try {
+      const newlyUnlocked = await checkAfterAction();
+      for (const achievement of newlyUnlocked) {
+        triggerReaction('achievement.unlocked', { name: achievement.name });
+      }
+    } catch (err) {
+      console.error('Error checking achievements after reviews:', err);
+    }
   };
 
   // Loading state

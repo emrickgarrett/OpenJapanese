@@ -7,6 +7,8 @@ import { ArrowLeft, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import LessonFlow from '@/components/lessons/LessonFlow';
 import { useLessons } from '@/hooks/useLessons';
+import { useAchievements } from '@/hooks/useAchievements';
+import { useMascot } from '@/hooks/useMascot';
 import { useProfile } from '@/providers/ProfileProvider';
 import {
   loadLessons,
@@ -38,6 +40,8 @@ export default function LessonPage() {
 
   const currentJlptLevel = (profile?.current_jlpt_level ?? 'N5') as JLPTLevel;
   const { completeLesson } = useLessons(profile?.id, currentJlptLevel);
+  const { checkAfterAction } = useAchievements(profile?.id);
+  const { triggerReaction } = useMascot();
 
   // Load lesson data
   useEffect(() => {
@@ -117,13 +121,19 @@ export default function LessonPage() {
 
         await completeLesson(lessonGroup.id, itemIds);
         await refreshProfile();
+
+        // Check achievements after lesson completion
+        const newlyUnlocked = await checkAfterAction();
+        for (const achievement of newlyUnlocked) {
+          triggerReaction('achievement.unlocked', { name: achievement.name });
+        }
       } catch (err) {
         console.error('Error completing lesson:', err);
       }
 
       router.push('/lessons');
     },
-    [lessonGroup, profile?.id, completeLesson, refreshProfile, router]
+    [lessonGroup, profile?.id, completeLesson, refreshProfile, checkAfterAction, triggerReaction, router]
   );
 
   // Loading state

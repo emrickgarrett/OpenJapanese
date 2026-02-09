@@ -102,24 +102,33 @@ export default function LessonPage() {
 
   // Handle lesson completion
   const handleComplete = useCallback(
-    (_xpEarned: number) => {
-      // Navigate immediately so the UI feels responsive
+    async (_xpEarned: number) => {
+      if (!lessonGroup || !profile?.id) {
+        router.push('/lessons');
+        return;
+      }
+
+      try {
+        // Await lesson completion so progress is persisted before navigating
+        const itemIds: { id: string; type: string }[] = [
+          ...lessonGroup.items.kanji.map((id) => ({ id, type: 'kanji' })),
+          ...lessonGroup.items.vocabulary.map((id) => ({
+            id,
+            type: 'vocabulary',
+          })),
+          ...lessonGroup.items.grammar.map((id) => ({ id, type: 'grammar' })),
+        ];
+
+        await completeLesson(lessonGroup.id, itemIds);
+      } catch (err) {
+        console.error('Error completing lesson:', err);
+      }
+
+      // Navigate as soon as progress is saved — next lesson will be unlocked
       router.push('/lessons');
 
-      if (!lessonGroup || !profile?.id) return;
-
-      // Fire-and-forget: persist progress, refresh profile, check achievements
-      const itemIds: { id: string; type: string }[] = [
-        ...lessonGroup.items.kanji.map((id) => ({ id, type: 'kanji' })),
-        ...lessonGroup.items.vocabulary.map((id) => ({
-          id,
-          type: 'vocabulary',
-        })),
-        ...lessonGroup.items.grammar.map((id) => ({ id, type: 'grammar' })),
-      ];
-
-      completeLesson(lessonGroup.id, itemIds)
-        .then(() => refreshProfile())
+      // Fire-and-forget: profile refresh & achievements can happen in the background
+      refreshProfile()
         .then(() => checkAfterAction())
         .then((newlyUnlocked) => {
           for (const achievement of newlyUnlocked) {
@@ -127,7 +136,7 @@ export default function LessonPage() {
           }
         })
         .catch((err) => {
-          console.error('Error completing lesson:', err);
+          console.error('Error refreshing profile/achievements:', err);
         });
     },
     [lessonGroup, profile?.id, completeLesson, refreshProfile, checkAfterAction, triggerReaction, router]

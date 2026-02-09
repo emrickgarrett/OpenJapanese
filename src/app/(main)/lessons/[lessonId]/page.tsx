@@ -109,7 +109,7 @@ export default function LessonPage() {
       }
 
       try {
-        // Build item IDs with types
+        // Await lesson completion so progress is persisted before navigating
         const itemIds: { id: string; type: string }[] = [
           ...lessonGroup.items.kanji.map((id) => ({ id, type: 'kanji' })),
           ...lessonGroup.items.vocabulary.map((id) => ({
@@ -120,18 +120,24 @@ export default function LessonPage() {
         ];
 
         await completeLesson(lessonGroup.id, itemIds);
-        await refreshProfile();
-
-        // Check achievements after lesson completion
-        const newlyUnlocked = await checkAfterAction();
-        for (const achievement of newlyUnlocked) {
-          triggerReaction('achievement.unlocked', { name: achievement.name });
-        }
       } catch (err) {
         console.error('Error completing lesson:', err);
       }
 
+      // Navigate as soon as progress is saved — next lesson will be unlocked
       router.push('/lessons');
+
+      // Fire-and-forget: profile refresh & achievements can happen in the background
+      refreshProfile()
+        .then(() => checkAfterAction())
+        .then((newlyUnlocked) => {
+          for (const achievement of newlyUnlocked) {
+            triggerReaction('achievement.unlocked', { name: achievement.name });
+          }
+        })
+        .catch((err) => {
+          console.error('Error refreshing profile/achievements:', err);
+        });
     },
     [lessonGroup, profile?.id, completeLesson, refreshProfile, checkAfterAction, triggerReaction, router]
   );

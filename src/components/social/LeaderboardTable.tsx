@@ -12,6 +12,11 @@ interface LeaderboardTableProps {
   currentUserId?: string;
 }
 
+/** Check whether a string looks like a URL (vs an emoji avatar). */
+function isImageUrl(value: string | null | undefined): boolean {
+  return !!value && (/^https?:\/\//.test(value) || value.startsWith('/'));
+}
+
 function getMedalEmoji(rank: number): string | null {
   if (rank === 1) return '\u{1F947}';
   if (rank === 2) return '\u{1F948}';
@@ -98,9 +103,13 @@ export default function LeaderboardTable({ entries, currentUserId }: Leaderboard
                         className="flex items-center gap-3 hover:opacity-80"
                       >
                         <Avatar className="h-8 w-8">
-                          <AvatarImage src={entry.avatarUrl} alt={entry.username} />
+                          {isImageUrl(entry.avatarUrl) ? (
+                            <AvatarImage src={entry.avatarUrl} alt={entry.username} />
+                          ) : null}
                           <AvatarFallback className="text-xs">
-                            {entry.username.slice(0, 2).toUpperCase()}
+                            {entry.avatarUrl && !isImageUrl(entry.avatarUrl)
+                              ? <span className="text-base">{entry.avatarUrl}</span>
+                              : entry.username.slice(0, 2).toUpperCase()}
                           </AvatarFallback>
                         </Avatar>
                         <span
@@ -173,9 +182,13 @@ export default function LeaderboardTable({ entries, currentUserId }: Leaderboard
 
                 {/* Avatar + name */}
                 <Avatar className="h-10 w-10">
-                  <AvatarImage src={entry.avatarUrl} alt={entry.username} />
+                  {isImageUrl(entry.avatarUrl) ? (
+                    <AvatarImage src={entry.avatarUrl} alt={entry.username} />
+                  ) : null}
                   <AvatarFallback className="text-xs">
-                    {entry.username.slice(0, 2).toUpperCase()}
+                    {entry.avatarUrl && !isImageUrl(entry.avatarUrl)
+                      ? <span className="text-xl">{entry.avatarUrl}</span>
+                      : entry.username.slice(0, 2).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
 

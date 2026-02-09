@@ -29,6 +29,11 @@ function getPageTitle(pathname: string): string {
   return 'OpenJapanese';
 }
 
+/** Check whether a string looks like a URL (vs an emoji avatar). */
+function isUrl(value: string): boolean {
+  return value.startsWith('http://') || value.startsWith('https://') || value.startsWith('/');
+}
+
 function formatXp(xp: number): string {
   if (xp >= 1_000_000) return `${(xp / 1_000_000).toFixed(1)}M`;
   if (xp >= 1_000) return `${(xp / 1_000).toFixed(1)}K`;
@@ -100,12 +105,16 @@ export default function Header() {
               href="/profile"
               className="flex-shrink-0 transition-transform hover:scale-105"
             >
-              {avatarUrl ? (
+              {avatarUrl && isUrl(avatarUrl) ? (
                 <img
                   src={avatarUrl}
                   alt={displayName}
                   className="h-8 w-8 rounded-full object-cover ring-2 ring-border"
                 />
+              ) : avatarUrl ? (
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-lg ring-2 ring-primary/30">
+                  {avatarUrl}
+                </div>
               ) : (
                 <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground ring-2 ring-primary/30">
                   {initial}

@@ -294,9 +294,13 @@ export default function ProfilePage() {
       >
         <div className="flex items-center gap-4">
           <Avatar className="h-20 w-20 border-4 border-primary/20">
-            <AvatarImage src={profile.avatar_url ?? ''} alt={profile.username} />
+            {profile.avatar_url && /^https?:\/\/|^\//.test(profile.avatar_url) ? (
+              <AvatarImage src={profile.avatar_url} alt={profile.username} />
+            ) : null}
             <AvatarFallback className="bg-primary/10 text-2xl font-bold text-primary">
-              {profile.username.slice(0, 2).toUpperCase()}
+              {profile.avatar_url && !/^https?:\/\/|^\//.test(profile.avatar_url)
+                ? profile.avatar_url
+                : profile.username.slice(0, 2).toUpperCase()}
             </AvatarFallback>
           </Avatar>
           <div>
